@@ -1,0 +1,77 @@
+/* ============================================
+   GUESS & SKETCH — CSS CUSTOM PROPERTIES
+   ============================================ */
+:root {
+  /* ── Colors ── */
+  --bg-primary: #0f0e17;
+  --bg-secondary: #1a1830;
+  --bg-card: rgba(255, 255, 255, 0.05);
+  --bg-card-hover: rgba(255, 255, 255, 0.1);
+  --bg-glass: rgba(255, 255, 255, 0.08);
+
+  --text-primary: #fffffe;
+  --text-secondary: #b8b5c8;
+  --text-muted: #6b6889;
+
+  --accent-pink: #ff6b9d;
+  --accent-purple: #c471f5;
+  --accent-blue: #6dd5fa;
+  --accent-green: #56ffa4;
+  --accent-yellow: #ffd166;
+  --accent-orange: #ff8a5c;
+  --accent-red: #ff5e5b;
+
+  --gradient-main: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --gradient-funky: linear-gradient(135deg, #f093fb 0%, #f5576c 50%, #ffd166 100%);
+  --gradient-cool: linear-gradient(135deg, #6dd5fa 0%, #2980b9 100%);
+  --gradient-fire: linear-gradient(135deg, #f5576c 0%, #ff8a5c 100%);
+  --gradient-neon: linear-gradient(135deg, #c471f5 0%, #6dd5fa 100%);
+  --gradient-success: linear-gradient(135deg, #56ffa4 0%, #59dfb2 100%);
+  --gradient-bg: linear-gradient(150deg, #0f0e17 0%, #1a1830 40%, #2d1b69 100%);
+
+  /* ── Typography ── */
+  --font-display: 'Fredoka', sans-serif;
+  --font-body: 'Outfit', sans-serif;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 2rem;
+  --text-4xl: 2.5rem;
+  --text-5xl: 3.5rem;
+
+  /* ── Spacing ── */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --space-2xl: 3rem;
+  --space-3xl: 4rem;
+
+  /* ── Border Radius ── */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --radius-full: 9999px;
+
+  /* ── Shadows ── */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.15);
+  --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.25);
+  --shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.35);
+  --shadow-glow-pink: 0 0 30px rgba(255, 107, 157, 0.3);
+  --shadow-glow-purple: 0 0 30px rgba(196, 113, 245, 0.3);
+  --shadow-glow-blue: 0 0 30px rgba(109, 213, 250, 0.3);
+  --shadow-glow-green: 0 0 20px rgba(86, 255, 164, 0.3);
+
+  /* ── Timing ── */
+  --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  --ease-smooth: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --duration-fast: 150ms;
+  --duration-normal: 300ms;
+  --duration-slow: 500ms;
+}

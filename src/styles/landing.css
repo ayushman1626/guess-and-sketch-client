@@ -1,0 +1,187 @@
+/* ============================================
+   LANDING PAGE STYLES
+   ============================================ */
+
+.landing {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-xl);
+  position: relative;
+  overflow: hidden;
+}
+
+/* ── Floating Doodles ── */
+.landing-doodles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.doodle {
+  position: absolute;
+  font-size: 2.5rem;
+  opacity: 0.15;
+  animation: float 8s ease-in-out infinite;
+  filter: blur(0.5px);
+}
+
+.doodle:nth-child(1) { top: 10%; left: 8%; animation-delay: 0s; font-size: 3rem; }
+.doodle:nth-child(2) { top: 20%; right: 12%; animation-delay: 1.5s; font-size: 2rem; }
+.doodle:nth-child(3) { bottom: 25%; left: 15%; animation-delay: 3s; }
+.doodle:nth-child(4) { top: 60%; right: 8%; animation-delay: 0.8s; font-size: 3.5rem; }
+.doodle:nth-child(5) { bottom: 10%; right: 25%; animation-delay: 2.2s; }
+.doodle:nth-child(6) { top: 40%; left: 5%; animation-delay: 4s; font-size: 2rem; }
+.doodle:nth-child(7) { bottom: 35%; right: 5%; animation-delay: 1s; font-size: 2.5rem; }
+.doodle:nth-child(8) { top: 5%; left: 45%; animation-delay: 2.5s; font-size: 1.8rem; }
+
+/* ── Main Content ── */
+.landing-content {
+  text-align: center;
+  z-index: 1;
+  max-width: 520px;
+  width: 100%;
+}
+
+.landing-logo {
+  font-size: 5rem;
+  margin-bottom: var(--space-md);
+  animation: bounceIn 0.8s var(--ease-bounce);
+  filter: drop-shadow(0 0 20px rgba(255, 107, 157, 0.4));
+}
+
+.landing-title {
+  font-family: var(--font-display);
+  font-size: var(--text-5xl);
+  font-weight: 700;
+  margin-bottom: var(--space-sm);
+  line-height: 1.1;
+}
+
+.landing-title .word {
+  display: inline-block;
+  animation: bounceIn 0.6s var(--ease-bounce) backwards;
+}
+
+.landing-title .word:nth-child(1) { animation-delay: 0.1s; color: var(--accent-pink); }
+.landing-title .word:nth-child(2) { animation-delay: 0.2s; color: var(--accent-blue); }
+.landing-title .word:nth-child(3) { animation-delay: 0.3s; color: var(--accent-yellow); }
+
+.landing-subtitle {
+  font-size: var(--text-lg);
+  color: var(--text-secondary);
+  margin-bottom: var(--space-2xl);
+  animation: slideUp 0.6s var(--ease-smooth) 0.4s backwards;
+}
+
+/* ── Card Form ── */
+.landing-card {
+  border-radius: var(--radius-xl);
+  padding: var(--space-2xl);
+  animation: slideUp 0.6s var(--ease-smooth) 0.5s backwards;
+}
+
+.landing-card .input {
+  text-align: center;
+  font-size: var(--text-xl);
+  letter-spacing: 0.5px;
+}
+
+.username-input-wrapper {
+  margin-bottom: var(--space-lg);
+  position: relative;
+}
+
+.username-input-wrapper .input-icon {
+  position: absolute;
+  left: var(--space-lg);
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: var(--text-xl);
+  opacity: 0.6;
+}
+
+.username-input-wrapper .input {
+  padding-left: 3rem;
+}
+
+.landing-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.landing-actions .btn {
+  width: 100%;
+  font-size: var(--text-xl);
+  padding: var(--space-lg) var(--space-xl);
+}
+
+.join-section {
+  margin-top: var(--space-lg);
+  padding-top: var(--space-lg);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.join-section .label {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  margin-bottom: var(--space-sm);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  font-weight: 500;
+}
+
+.join-row {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.join-row .input {
+  flex: 1;
+  text-align: center;
+  letter-spacing: 8px;
+  font-size: var(--text-2xl);
+  font-family: var(--font-display);
+}
+
+.join-row .btn {
+  flex-shrink: 0;
+}
+
+/* ── Connection Status ── */
+.connection-status {
+  position: fixed;
+  bottom: var(--space-lg);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-full);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  z-index: 100;
+}
+
+.connection-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent-red);
+  transition: background var(--duration-normal);
+}
+
+.connection-dot.connected {
+  background: var(--accent-green);
+  box-shadow: 0 0 10px rgba(86, 255, 164, 0.5);
+}
+
+.connection-dot.connecting {
+  background: var(--accent-yellow);
+  animation: pulse 1s infinite;
+}
