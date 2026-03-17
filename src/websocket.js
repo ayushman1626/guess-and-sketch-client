@@ -18,7 +18,7 @@ export function connect() {
     stompClient = new Client({
       webSocketFactory: () => new SockJS(WS_URL),
       reconnectDelay: 3000,
-      debug: () => {},  // silence debug logs
+      debug: () => { },  // silence debug logs
       onConnect: () => {
         console.log('[WS] Connected');
         gameState.set({ connected: true });
@@ -62,23 +62,70 @@ function subscribeToUserQueues() {
   // Word options (auto-sent at round start, wrapped in GameEvent)
   stompClient.subscribe('/user/queue/word-options', (msg) => {
     try {
-      const data = JSON.parse(msg.body);
-      // Could be a GameEvent wrapper { type: "WORD_OPTIONS", payload: { words: [...] } }
-      // or a raw WordOptionMessage { words: [...] }
       let words;
-      if (data.type === 'WORD_OPTIONS') {
-        words = data.payload.words;
-      } else if (data.words) {
-        words = data.words;
+      let data;
+      try {
+        data = JSON.parse(msg.body);
+      } catch(e) {
+        // If it's a plain comma-separated string instead of json
+        if (msg.body && msg.body.includes(',')) {
+          words = msg.body.replace(/"/g, '').split(',').map(w => w.trim());
+        }
       }
-      if (words) {
+
+      if (!words && data) {
+        if (Array.isArray(data)) {
+          words = data;
+        } else if (data.type === 'WORD_OPTIONS') {
+          words = Array.isArray(data.payload) ? data.payload : data.payload?.words;
+        } else if (data.words) {
+          words = data.words;
+        }
+      }
+
+      if (words && words.length > 0) {
         console.log('[WS] Word options:', words);
-        // Store in state FIRST so game screen can access them if it mounts later
         gameState.set({ wordOptions: words });
         events.emit(EVT.WORD_OPTIONS, words);
       }
     } catch (e) {
-      console.error('[WS] Error parsing word options:', e);
+      console.error('[WS] Error processing word options:', e);
+    }
+  });
+
+  // Selected Word
+  stompClient.subscribe('/user/queue/selected-word', (msg) => {
+    try {
+      let payload;
+      let wordToAssign = null;
+      try {
+        payload = JSON.parse(msg.body);
+      } catch (e) {
+        // Plain string fallback
+        wordToAssign = msg.body;
+      }
+      
+      if (wordToAssign === null && payload) {
+        if (payload.type === 'SELECTED_WORD') {
+          wordToAssign = payload.payload;
+          if (typeof wordToAssign === 'object' && wordToAssign !== null) {
+            wordToAssign = wordToAssign.word || wordToAssign;
+          }
+        } else if (payload.word) {
+          wordToAssign = payload.word;
+        } else if (typeof payload === 'string') {
+          wordToAssign = payload;
+        }
+      }
+
+      if (wordToAssign) {
+        let finalWord = String(wordToAssign).replace(/"/g, '').trim();
+        console.log('[WS] Auto-selected word:', finalWord);
+        gameState.set({ currentWord: finalWord });
+        events.emit(EVT.WORD_ASSIGNED, finalWord);
+      }
+    } catch (e) {
+      console.error('[WS] Error processing selected word:', e);
     }
   });
 }
@@ -138,7 +185,7 @@ export function subscribeToRoom(roomId) {
 
 function unsubscribeRoom() {
   roomSubscriptions.forEach(sub => {
-    try { sub.unsubscribe(); } catch (e) {}
+    try { sub.unsubscribe(); } catch (e) { }
   });
   roomSubscriptions = [];
 }
@@ -186,6 +233,9 @@ function handleGameEvent(event) {
     case 'ROUND_ENDED':
       events.emit(EVT.ROUND_ENDED, event.payload);
       break;
+    case 'ROUND_SCORES':
+      events.emit(EVT.ROUND_SCORES, event.payload);
+      break;
     case 'CHAT_MESSAGE':
       // Wrong guesses come on the main room topic
       if (event.payload) {
@@ -193,6 +243,8 @@ function handleGameEvent(event) {
       }
       break;
     case 'GAME_STOP':
+      // If GAME_ENDED already fired and we are showing the game over screen, ignore GAME_STOP.
+      if (gameState.get().gameState === 'GAME_OVER') break;
       // Server says game must stop (not enough players)
       if (event.payload) {
         // Sync player list from payload
@@ -216,6 +268,10 @@ function handleGameEvent(event) {
       }
       gameState.set({ gameState: 'WAITING', gameStarted: false, wordOptions: [] });
       events.emit(EVT.GAME_STOP, event.payload);
+      break;
+    case 'GAME_ENDED':
+      gameState.set({ gameState: 'GAME_OVER', gameStarted: false, wordOptions: [] });
+      events.emit(EVT.GAME_ENDED, event.payload);
       break;
     default:
       console.log('[WS] Unknown event type:', event.type);

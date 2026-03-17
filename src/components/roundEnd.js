@@ -2,17 +2,46 @@
    ROUND END OVERLAY — Word reveal + confetti
    ============================================ */
 
+import { gameState } from '../state.js';
+
 let overlayEl = null;
 let countdownInterval = null;
 
-export function showRoundEnd(message) {
+export function showRoundEnd(message, scores = []) {
   hideRoundEnd();
 
   // Extract word from "Round ended! The word was: <word>"
+  let word = '???';
   const wordMatch = message.match(/The word was: (.+)/i);
-  const word = wordMatch ? wordMatch[1] : '???';
+  if (wordMatch) {
+    word = wordMatch[1];
+  } else {
+    // Fallback if the word is in the message itself or state
+    const s = gameState.get();
+    if (s.currentWord) word = s.currentWord;
+  }
 
   let countdown = 5;
+
+  let scoresHtml = '';
+  if (scores && scores.length > 0) {
+    // Sort scores descending by round score, then total score
+    const sortedScores = [...scores].sort((a, b) => b.score - a.score || b.totalScore - a.totalScore);
+    
+    scoresHtml = `
+      <div class="round-end-scores">
+        <h3 class="round-end-scores-title">Points this round</h3>
+        <ul class="round-end-scores-list">
+          ${sortedScores.map(s => `
+            <li class="round-end-score-item ${s.score > 0 ? 'positive-score' : ''}">
+              <span class="round-end-score-name">${s.username}</span>
+              <span class="round-end-score-points">+${s.score || 0}</span>
+            </li>
+          `).join('')}
+        </ul>
+      </div>
+    `;
+  }
 
   overlayEl = document.createElement('div');
   overlayEl.className = 'round-end-overlay';
@@ -21,6 +50,7 @@ export function showRoundEnd(message) {
       <div class="round-end-emoji">⏰</div>
       <h2 class="round-end-title">Round Over!</h2>
       <div class="round-end-word gradient-text">${word}</div>
+      ${scoresHtml}
       <div class="round-end-countdown">Next round in <strong id="round-end-timer">${countdown}</strong>s</div>
     </div>
   `;

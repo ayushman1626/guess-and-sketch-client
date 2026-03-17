@@ -51,10 +51,13 @@ export const EVT = {
   // Game flow
   GAME_STARTED: 'gameStarted',
   GAME_STOP: 'gameStop',
+  GAME_ENDED: 'gameEnded',
   ROUND_STARTED: 'roundStarted',
   WORD_OPTIONS: 'wordOptions',
   WORD_SELECTED: 'wordSelected',
+  WORD_ASSIGNED: 'wordAssigned',
   ROUND_ENDED: 'roundEnded',
+  ROUND_SCORES: 'roundScores',
 
   // Gameplay
   DRAW_EVENT: 'drawEvent',

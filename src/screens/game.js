@@ -9,6 +9,8 @@ import { createScoreboard, renderScoreboard, destroyScoreboard } from '../compon
 import { createTimer, startTimer, stopTimer, resetTimerUI } from '../components/timer.js';
 import { showWordSelect, hideWordSelect } from '../components/wordSelect.js';
 import { showRoundEnd, hideRoundEnd } from '../components/roundEnd.js';
+import { showGameOver, hideGameOver } from '../components/gameOver.js';
+import { requestWords } from '../websocket.js';
 import { playGameStart, playCorrectGuess, playRoundEnd as playRoundEndSfx, playWordSelect as playWordSelectSfx, playPlayerJoin, playPlayerLeave, playGameStop } from '../sounds.js';
 
 let cleanupFns = [];
@@ -97,6 +99,27 @@ export function renderGame(container) {
     // Remove danger class
     const gameEl = document.getElementById('game-container');
     if (gameEl) gameEl.classList.remove('timer-danger');
+    
+    startTimer(60);
+
+    // RACE CONDITION FIX & FALLBACK: check if we have word options
+    const s = gameState.get();
+    if (isMe) {
+      if (s.wordOptions && s.wordOptions.length > 0) {
+        console.log('[Game] Displaying pending word options directly in round started listener.');
+        playWordSelectSfx();
+        showWordSelect(s.wordOptions);
+      } else {
+        // Fallback: If 1 second passes and we still have no word options, request them forcefully
+        setTimeout(() => {
+          const checkState = gameState.get();
+          if (checkState.gameState === 'WORD_SELECTION' && (!checkState.wordOptions || checkState.wordOptions.length === 0)) {
+            console.log('[Game] Word options missing, triggering requestWords fallback...');
+            requestWords();
+          }
+        }, 1000);
+      }
+    }
   });
 
   // Word options received (drawer only)
@@ -117,6 +140,16 @@ export function renderGame(container) {
     }
   }, 100);
 
+  // Auto-assigned word (when drawer didn't pick in time)
+  const offWordAssigned = events.on(EVT.WORD_ASSIGNED, (word) => {
+    // We already set gameState in websocket, but let's make sure updateWordDisplay is called
+    // if we are already in drawing phase and we are the drawer.
+    const s = gameState.get();
+    if (s.gameState === 'DRAWING' && s.isDrawer) {
+      updateWordDisplay(word);
+    }
+  });
+
   // Word selected — drawing begins
   const offWordSelected = events.on(EVT.WORD_SELECTED, (drawer) => {
     hideWordSelect();
@@ -134,8 +167,6 @@ export function renderGame(container) {
     } else {
       updateRoundInfo(`${drawer} is drawing`);
     }
-
-    startTimer(60);
   });
 
   // Player guessed correctly
@@ -145,9 +176,17 @@ export function renderGame(container) {
   });
 
   // Round ended
-  const offRoundEnded = events.on(EVT.ROUND_ENDED, (message) => {
+  const offRoundEnded = events.on(EVT.ROUND_ENDED, (payload) => {
     stopTimer();
     playRoundEndSfx();
+    let message = 'Round over!';
+    
+    if (typeof payload === 'string') {
+      message = payload;
+    } else if (payload && payload.message) {
+      message = payload.message;
+    }
+
     gameState.set({ gameState: 'ROUND_END', roundEndMessage: message, wordOptions: [] });
     updateRoundInfo('Round over!');
 
@@ -161,9 +200,28 @@ export function renderGame(container) {
       updateWordDisplay(wordMatch[1]);
     }
 
-    showRoundEnd(message);
+    // Pass the message but empty scores initially. Scores will arrive via ROUND_SCORES
+    showRoundEnd(message, []);
     updateToolbarVisibility();
     renderScoreboard();
+  });
+
+  // Round scores arrived
+  const offRoundScores = events.on(EVT.ROUND_SCORES, (payload) => {
+    let scores = [];
+    if (payload && payload.playerScores) {
+      scores = payload.playerScores;
+    } else if (Array.isArray(payload)) {
+      scores = payload;
+    }
+
+    const s = gameState.get();
+    let message = s.roundEndMessage || 'Round over!';
+    
+    // Update the existing round end screen with scores
+    if (s.gameState === 'ROUND_END') {
+      showRoundEnd(message, scores);
+    }
   });
 
   // Player joined mid-game
@@ -204,6 +262,9 @@ export function renderGame(container) {
 
   // Game stopped — not enough players, go back to lobby
   const offGameStop = events.on(EVT.GAME_STOP, () => {
+    // If GAME_ENDED already fired (graceful end), let that handler own the flow.
+    if (gameState.get().gameState === 'GAME_OVER') return;
+
     stopTimer();
     hideWordSelect();
     hideRoundEnd();
@@ -223,7 +284,20 @@ export function renderGame(container) {
     }, 2000);
   });
 
-  cleanupFns = [offRoundStarted, offWordOptions, offWordSelected, offGuessed, offRoundEnded, offJoined, offLeft, offRoomUpdate, offGameStop];
+  // Game ended gracefully (max rounds or not enough players — graceful path)
+  const offGameEnded = events.on(EVT.GAME_ENDED, (payload) => {
+    stopTimer();
+    hideWordSelect();
+    hideRoundEnd();
+    updateToolbarVisibility();
+
+    const gameEl = document.getElementById('game-container');
+    if (gameEl) gameEl.classList.remove('timer-danger');
+
+    showGameOver(payload);
+  });
+
+  cleanupFns = [offRoundStarted, offWordOptions, offWordAssigned, offWordSelected, offGuessed, offRoundEnded, offRoundScores, offJoined, offLeft, offRoomUpdate, offGameStop, offGameEnded];
 
   return () => {
     cleanupFns.forEach(fn => fn());
@@ -235,6 +309,7 @@ export function renderGame(container) {
     stopTimer();
     hideWordSelect();
     hideRoundEnd();
+    hideGameOver();
     destroyCanvas();
     destroyChat();
     destroyScoreboard();
@@ -274,4 +349,42 @@ function updateWordDisplay(word) {
   const area = document.getElementById('word-hint-area');
   if (!area) return;
   area.innerHTML = `<span class="word-display">${word}</span>`;
+}
+
+function setupMobileTabs() {
+  const tabs = document.querySelectorAll('.mobile-tab');
+  if (!tabs.length) return;
+
+  const chatPanel = document.querySelector('.chat-panel');
+  const scoreboardPanel = document.querySelector('.scoreboard');
+
+  // Initial setup: activate chat tab
+  if (chatPanel) chatPanel.classList.add('mobile-active');
+  if (scoreboardPanel) scoreboardPanel.classList.remove('mobile-active');
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      // Update tab styles
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+
+      const tabId = tab.getAttribute('data-tab');
+
+      // Refresh panels in case they were recreated
+      const currentChat = document.querySelector('.chat-panel');
+      const currentScoreboard = document.querySelector('.scoreboard');
+
+      if (tabId === 'chat') {
+        if (currentChat) currentChat.classList.add('mobile-active');
+        if (currentScoreboard) currentScoreboard.classList.remove('mobile-active');
+        
+        // Clear chat badge
+        const badge = document.getElementById('chat-badge');
+        if (badge) badge.textContent = '';
+      } else if (tabId === 'scores') {
+        if (currentChat) currentChat.classList.remove('mobile-active');
+        if (currentScoreboard) currentScoreboard.classList.add('mobile-active');
+      }
+    });
+  });
 }
