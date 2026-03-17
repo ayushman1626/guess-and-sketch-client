@@ -292,3 +292,37 @@ ul, ol { list-style: none; }
   color: var(--accent-blue);
   border-color: rgba(109, 213, 250, 0.3);
 }
+
+/* ── Mobile Global Overrides ── */
+@media (max-width: 768px) {
+  body {
+    overflow-x: hidden;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  .btn {
+    padding: var(--space-sm) var(--space-lg);
+    font-size: var(--text-base);
+  }
+
+  .btn-sm {
+    padding: var(--space-xs) var(--space-md);
+    font-size: var(--text-xs);
+  }
+
+  .input {
+    font-size: 16px; /* prevents iOS zoom on focus */
+    padding: var(--space-sm) var(--space-md);
+  }
+
+  .toast-container {
+    top: var(--space-md);
+    right: var(--space-md);
+    left: var(--space-md);
+  }
+
+  .toast {
+    min-width: auto;
+    font-size: var(--text-sm);
+  }
+}

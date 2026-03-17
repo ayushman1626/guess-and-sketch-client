@@ -75,3 +75,14 @@
   --duration-normal: 300ms;
   --duration-slow: 500ms;
 }
+
+/* ── Mobile Overrides ── */
+@media (max-width: 768px) {
+  :root {
+    --text-4xl: 2rem;
+    --text-5xl: 2.5rem;
+    --space-xl: 1.25rem;
+    --space-2xl: 1.75rem;
+    --space-3xl: 2.5rem;
+  }
+}

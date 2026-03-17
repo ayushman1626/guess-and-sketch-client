@@ -720,20 +720,325 @@
 @media (max-width: 1024px) {
   .game {
     grid-template-columns: 1fr;
-    grid-template-rows: auto 1fr auto;
+    grid-template-rows: auto 1fr auto auto;
     grid-template-areas:
       "header"
       "canvas"
-      "chat";
+      "bottom-panel"
+      "tab-bar";
+    height: 100vh;
+    height: 100dvh; /* dynamic viewport height for mobile browsers */
   }
 
   .scoreboard {
-    display: none;
+    grid-area: bottom-panel;
+    border-right: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    max-height: 35vh;
+    display: none; /* hidden by default, toggled via JS */
+  }
+
+  .scoreboard.mobile-active {
+    display: flex;
   }
 
   .chat-panel {
-    max-height: 250px;
+    grid-area: bottom-panel;
+    max-height: 35vh;
     border-left: none;
     border-top: 1px solid rgba(255, 255, 255, 0.06);
+    display: none; /* hidden by default, toggled via JS */
+  }
+
+  .chat-panel.mobile-active {
+    display: flex;
+  }
+
+  /* ── Mobile Tab Bar ── */
+  .mobile-tab-bar {
+    grid-area: tab-bar;
+    display: flex;
+    background: rgba(15, 14, 23, 0.95);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    z-index: 20;
+  }
+
+  .mobile-tab {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-xs);
+    padding: var(--space-sm) var(--space-md);
+    font-family: var(--font-display);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--text-muted);
+    transition: all var(--duration-fast);
+    border: none;
+    background: none;
+    cursor: pointer;
+    position: relative;
+  }
+
+  .mobile-tab.active {
+    color: var(--accent-purple);
+  }
+
+  .mobile-tab.active::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 20%;
+    right: 20%;
+    height: 3px;
+    background: var(--gradient-neon);
+    border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+  }
+
+  .mobile-tab-badge {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent-pink);
+    display: none;
+  }
+
+  .mobile-tab-badge.visible {
+    display: block;
+    animation: pulse 1.5s ease-in-out infinite;
   }
 }
+
+/* ── Small mobile (phone-specific tweaks) ── */
+@media (max-width: 768px) {
+  /* Header compact layout */
+  .game-header {
+    padding: var(--space-xs) var(--space-sm);
+    flex-wrap: nowrap;
+    gap: var(--space-xs);
+  }
+
+  .game-logo {
+    font-size: 1.2rem;
+  }
+
+  .game-room-id {
+    display: none;
+  }
+
+  .game-header-center {
+    gap: var(--space-xs);
+    min-width: 0;
+  }
+
+  .game-round-info {
+    font-size: var(--text-sm);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 140px;
+  }
+
+  .word-hint {
+    gap: 3px;
+  }
+
+  .word-hint-char {
+    width: 16px;
+    height: 24px;
+    font-size: var(--text-base);
+    border-bottom-width: 2px;
+  }
+
+  .word-hint-space {
+    width: 8px;
+  }
+
+  .word-display {
+    font-size: var(--text-base);
+    letter-spacing: 2px;
+  }
+
+  /* Timer smaller */
+  .timer-container {
+    width: 36px;
+    height: 36px;
+  }
+
+  .timer-svg {
+    width: 36px;
+    height: 36px;
+  }
+
+  .timer-text {
+    font-size: var(--text-xs);
+  }
+
+  /* Canvas area fills width */
+  .canvas-area {
+    padding: var(--space-xs);
+  }
+
+  .canvas-wrapper {
+    border-radius: var(--radius-md);
+    width: 100%;
+  }
+
+  .canvas-wrapper canvas {
+    width: 100% !important;
+    height: auto !important;
+  }
+
+  /* Drawing toolbar compact layout */
+  .draw-toolbar {
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: var(--space-xs) var(--space-sm);
+    gap: var(--space-xs);
+    margin-top: var(--space-xs);
+    border-radius: var(--radius-md);
+  }
+
+  .color-palette {
+    gap: 2px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .color-swatch {
+    width: 22px;
+    height: 22px;
+  }
+
+  .brush-slider {
+    width: 60px;
+  }
+
+  .brush-size-group label {
+    font-size: 0.65rem;
+  }
+
+  .tool-btn {
+    width: 30px;
+    height: 30px;
+    font-size: var(--text-base);
+  }
+
+  .toolbar-divider {
+    height: 18px;
+  }
+
+  /* Chat compact on mobile */
+  .chat-title {
+    padding: var(--space-xs) var(--space-md);
+    font-size: var(--text-base);
+  }
+
+  .chat-messages {
+    padding: var(--space-xs) var(--space-sm);
+  }
+
+  .chat-input-area {
+    padding: var(--space-xs) var(--space-sm);
+  }
+
+  .chat-input-area .input {
+    font-size: 16px;
+  }
+
+  .chat-send-btn {
+    width: 34px;
+    height: 34px;
+    font-size: var(--text-base);
+  }
+
+  /* Scoreboard compact on mobile */
+  .scoreboard-title {
+    padding: var(--space-xs) var(--space-md);
+    font-size: var(--text-base);
+  }
+
+  .scoreboard-list {
+    padding: var(--space-xs);
+  }
+
+  .score-item {
+    padding: var(--space-xs) var(--space-sm);
+  }
+
+  .score-avatar-sm {
+    width: 26px;
+    height: 26px;
+    font-size: var(--text-xs);
+  }
+
+  .score-rank {
+    width: 20px;
+    height: 20px;
+    font-size: 0.65rem;
+  }
+
+  .score-name {
+    font-size: var(--text-xs);
+  }
+
+  .score-points {
+    font-size: var(--text-sm);
+  }
+
+  /* Overlays — already use width: 90%, just reduce padding */
+  .word-select-card {
+    padding: var(--space-lg) var(--space-md);
+  }
+
+  .word-select-title {
+    font-size: var(--text-xl);
+  }
+
+  .word-select-timer {
+    font-size: var(--text-3xl);
+  }
+
+  .word-options {
+    gap: var(--space-sm);
+  }
+
+  .word-option {
+    padding: var(--space-md) var(--space-lg);
+    font-size: var(--text-base);
+    min-width: 100px;
+  }
+
+  .round-end-card {
+    padding: var(--space-lg) var(--space-md);
+  }
+
+  .round-end-emoji {
+    font-size: 3rem;
+  }
+
+  .round-end-title {
+    font-size: var(--text-xl);
+  }
+
+  .round-end-word {
+    font-size: var(--text-2xl);
+  }
+
+  /* Status banner */
+  .status-banner {
+    font-size: var(--text-sm);
+    padding: var(--space-xs) var(--space-sm);
+    margin: var(--space-xs) var(--space-sm);
+  }
+}
+
+/* Hide tab bar on desktop */
+@media (min-width: 1025px) {
+  .mobile-tab-bar {
+    display: none !important;
+  }
+}
+

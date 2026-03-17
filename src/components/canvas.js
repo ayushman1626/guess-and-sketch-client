@@ -18,6 +18,11 @@ let currentColor = '#000000';
 let brushSize = 4;
 let isEraser = false;
 let cleanupFns = [];
+let resizeTimeout = null;
+
+// Internal (logical) resolution — always 700×500 for consistent drawing coordinates
+const CANVAS_W = 700;
+const CANVAS_H = 500;
 
 export function createCanvas(parentEl) {
   const wrapper = document.createElement('div');
@@ -26,8 +31,8 @@ export function createCanvas(parentEl) {
 
   canvas = document.createElement('canvas');
   canvas.id = 'draw-canvas';
-  canvas.width = 700;
-  canvas.height = 500;
+  canvas.width = CANVAS_W;
+  canvas.height = CANVAS_H;
   wrapper.appendChild(canvas);
 
   ctx = canvas.getContext('2d');
@@ -37,6 +42,15 @@ export function createCanvas(parentEl) {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   parentEl.appendChild(wrapper);
+
+  // ── Responsive sizing ──
+  sizeCanvasToFit(parentEl);
+  const onResize = () => {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(() => sizeCanvasToFit(parentEl), 150);
+  };
+  window.addEventListener('resize', onResize);
+  cleanupFns.push(() => window.removeEventListener('resize', onResize));
 
   // ── Toolbar ──
   const toolbar = document.createElement('div');
@@ -67,6 +81,23 @@ export function createCanvas(parentEl) {
   updateToolbarVisibility();
 
   return { canvas, ctx, wrapper, toolbar };
+}
+
+/**
+ * Sizes the canvas display area to fit its parent while keeping
+ * the internal resolution at CANVAS_W × CANVAS_H for consistent drawing.
+ */
+function sizeCanvasToFit(parentEl) {
+  if (!canvas) return;
+  const parentWidth = parentEl.clientWidth;
+  // On mobile, leave small padding; on desktop, cap at CANVAS_W
+  const padding = window.innerWidth <= 768 ? 8 : 32;
+  const maxDisplayWidth = Math.min(parentWidth - padding, CANVAS_W);
+  const displayHeight = Math.round(maxDisplayWidth * (CANVAS_H / CANVAS_W));
+
+  // CSS display size (visual only — internal resolution stays CANVAS_W × CANVAS_H)
+  canvas.style.width = maxDisplayWidth + 'px';
+  canvas.style.height = displayHeight + 'px';
 }
 
 function setupDrawing() {

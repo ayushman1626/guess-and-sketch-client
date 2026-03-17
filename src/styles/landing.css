@@ -185,3 +185,58 @@
   background: var(--accent-yellow);
   animation: pulse 1s infinite;
 }
+
+/* ── Mobile Landing ── */
+@media (max-width: 768px) {
+  .landing {
+    padding: var(--space-md);
+    justify-content: flex-start;
+    padding-top: 10vh;
+  }
+
+  .landing-logo {
+    font-size: 3.5rem;
+    margin-bottom: var(--space-sm);
+  }
+
+  .landing-title {
+    font-size: var(--text-4xl);
+  }
+
+  .landing-subtitle {
+    font-size: var(--text-base);
+    margin-bottom: var(--space-lg);
+  }
+
+  .landing-card {
+    padding: var(--space-lg);
+  }
+
+  .landing-card .input {
+    font-size: 16px;
+  }
+
+  .username-input-wrapper .input {
+    padding-left: 2.5rem;
+  }
+
+  .username-input-wrapper .input-icon {
+    left: var(--space-md);
+    font-size: var(--text-base);
+  }
+
+  .landing-actions .btn {
+    font-size: var(--text-lg);
+    padding: var(--space-md) var(--space-lg);
+  }
+
+  .join-row .input {
+    letter-spacing: 4px;
+    font-size: var(--text-xl);
+  }
+
+  /* Hide some doodles on mobile */
+  .doodle:nth-child(n+5) {
+    display: none;
+  }
+}

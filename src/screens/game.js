@@ -42,6 +42,17 @@ export function renderGame(container) {
 
       <!-- Chat (right) -->
       <div id="chat-area"></div>
+
+      <!-- Mobile Tab Bar -->
+      <div class="mobile-tab-bar" id="mobile-tab-bar">
+        <button class="mobile-tab active" data-tab="chat" id="tab-chat">
+          💬 Chat
+          <span class="mobile-tab-badge" id="chat-badge"></span>
+        </button>
+        <button class="mobile-tab" data-tab="scores" id="tab-scores">
+          🏆 Scores
+        </button>
+      </div>
     </div>
   `;
 
@@ -50,6 +61,9 @@ export function renderGame(container) {
   createCanvas(document.getElementById('canvas-area'));
   createChat(document.getElementById('chat-area'));
   createTimer(document.getElementById('timer-area'));
+
+  // ── Mobile Tab Switching ──
+  setupMobileTabs();
 
   playGameStart();
 

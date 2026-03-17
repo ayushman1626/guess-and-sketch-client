@@ -223,3 +223,53 @@
   padding: var(--space-sm) var(--space-md) !important;
   color: var(--text-muted);
 }
+
+/* ── Mobile Lobby ── */
+@media (max-width: 768px) {
+  .lobby {
+    padding: var(--space-md);
+    justify-content: flex-start;
+    padding-top: 8vh;
+  }
+
+  .lobby-card {
+    padding: var(--space-lg);
+  }
+
+  .lobby-title {
+    font-size: var(--text-xl);
+  }
+
+  .room-code-digits {
+    font-size: var(--text-3xl);
+    letter-spacing: 8px;
+  }
+
+  .room-code {
+    padding: var(--space-sm) var(--space-md);
+  }
+
+  .players-grid {
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+    gap: var(--space-sm);
+  }
+
+  .player-card {
+    padding: var(--space-sm);
+  }
+
+  .player-avatar {
+    width: 40px;
+    height: 40px;
+    font-size: var(--text-base);
+  }
+
+  .player-name {
+    font-size: var(--text-xs);
+  }
+
+  .lobby-actions .btn {
+    font-size: var(--text-lg);
+    padding: var(--space-md);
+  }
+}
