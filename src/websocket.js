@@ -66,7 +66,7 @@ function subscribeToUserQueues() {
       let data;
       try {
         data = JSON.parse(msg.body);
-      } catch(e) {
+      } catch (e) {
         // If it's a plain comma-separated string instead of json
         if (msg.body && msg.body.includes(',')) {
           words = msg.body.replace(/"/g, '').split(',').map(w => w.trim());
@@ -93,6 +93,18 @@ function subscribeToUserQueues() {
     }
   });
 
+  // Error messages
+  stompClient.subscribe('/user/queue/errors', (msg) => {
+    try {
+      const errorMsg = JSON.parse(msg.body);
+      if (errorMsg.type === 'RATELIMIT_EXCEEDED') {
+        events.emit(EVT.SHOW_TOAST, { message: errorMsg.payload, type: 'error' });
+      }
+    } catch (e) {
+      console.error('[WS] Error processing error messages:', e);
+    }
+  });
+
   // Selected Word
   stompClient.subscribe('/user/queue/selected-word', (msg) => {
     try {
@@ -104,7 +116,7 @@ function subscribeToUserQueues() {
         // Plain string fallback
         wordToAssign = msg.body;
       }
-      
+
       if (wordToAssign === null && payload) {
         if (payload.type === 'SELECTED_WORD') {
           wordToAssign = payload.payload;
@@ -307,10 +319,10 @@ export function selectWord(word) {
   });
 }
 
-export function sendDraw(prevX, prevY, currentX, currentY, color) {
+export function sendDrawEvent(payload) {
   stompClient.publish({
     destination: '/app/draw',
-    body: JSON.stringify({ prevX, prevY, currentX, currentY, color }),
+    body: JSON.stringify(payload),
   });
 }
 

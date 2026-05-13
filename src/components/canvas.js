@@ -2,7 +2,7 @@
    CANVAS COMPONENT
    ============================================ */
 import { gameState } from '../state.js';
-import { sendDraw } from '../websocket.js';
+import { sendDrawEvent } from '../websocket.js';
 import { events, EVT } from '../events.js';
 
 const COLORS = [
@@ -19,6 +19,15 @@ let brushSize = 4;
 let isEraser = false;
 let cleanupFns = [];
 let resizeTimeout = null;
+
+// Buffer for sending batched points
+let pointBuffer = [];
+let batchInterval = null;
+
+// State for receiving remote drawing
+let remoteX = 0, remoteY = 0;
+let remoteColor = '#000000';
+let remoteSize = 4;
 
 // Internal (logical) resolution — always 700×500 for consistent drawing coordinates
 const CANVAS_W = 700;
@@ -109,6 +118,24 @@ function setupDrawing() {
     const scaleY = canvas.height / rect.height;
     lastX = (e.clientX - rect.left) * scaleX;
     lastY = (e.clientY - rect.top) * scaleY;
+
+    const color = isEraser ? '#FFFFFF' : currentColor;
+    sendDrawEvent({
+      type: 'start',
+      x: Math.round(lastX),
+      y: Math.round(lastY),
+      color: color,
+      size: brushSize
+    });
+
+    pointBuffer = [];
+    if (batchInterval) clearInterval(batchInterval);
+    batchInterval = setInterval(() => {
+      if (pointBuffer.length > 0) {
+        sendDrawEvent({ type: 'draw', points: [...pointBuffer] });
+        pointBuffer = [];
+      }
+    }, 40);
   };
 
   const onMouseMove = (e) => {
@@ -121,17 +148,29 @@ function setupDrawing() {
 
     const color = isEraser ? '#FFFFFF' : currentColor;
     drawLine(lastX, lastY, x, y, color, brushSize);
-    sendDraw(
-      Math.round(lastX), Math.round(lastY),
-      Math.round(x), Math.round(y),
-      color
-    );
+    
+    pointBuffer.push({ x: Math.round(x), y: Math.round(y) });
 
     lastX = x;
     lastY = y;
   };
 
-  const onMouseUp = () => { drawing = false; };
+  const onMouseUp = () => {
+    if (!drawing) return;
+    drawing = false;
+
+    if (batchInterval) {
+      clearInterval(batchInterval);
+      batchInterval = null;
+    }
+
+    if (pointBuffer.length > 0) {
+      sendDrawEvent({ type: 'draw', points: [...pointBuffer] });
+      pointBuffer = [];
+    }
+    
+    sendDrawEvent({ type: 'end' });
+  };
 
   // ── Touch support ──
   const onTouchStart = (e) => {
@@ -163,7 +202,29 @@ function setupDrawing() {
 
   // ── Receive remote draw events ──
   const offDraw = events.on(EVT.DRAW_EVENT, (data) => {
-    drawLine(data.prevX, data.prevY, data.currentX, data.currentY, data.color, brushSize);
+    if (data.type === 'start') {
+      remoteX = data.x;
+      remoteY = data.y;
+      remoteColor = data.color;
+      remoteSize = data.size;
+    } else if (data.type === 'draw') {
+      if (!ctx || !data.points || data.points.length === 0) return;
+      ctx.strokeStyle = remoteColor;
+      ctx.lineWidth = remoteSize;
+      ctx.beginPath();
+      ctx.moveTo(remoteX, remoteY);
+      data.points.forEach(p => {
+        ctx.lineTo(p.x, p.y);
+        remoteX = p.x;
+        remoteY = p.y;
+      });
+      ctx.stroke();
+    } else if (data.type === 'end') {
+      // Stroke ended, no-op needed
+    } else if (data.prevX !== undefined) {
+      // Backward compatibility for old line segments
+      drawLine(data.prevX, data.prevY, data.currentX, data.currentY, data.color, brushSize);
+    }
   });
 
   cleanupFns.push(offDraw);

@@ -637,6 +637,7 @@ let currentRoomId = null;
 
 // ─── 1. Connect ───────────────────────────────────
 function connect() {
+  
   const socket = new SockJS("http://localhost:8080/ws");
   stompClient = Stomp.over(socket);
 

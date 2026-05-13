@@ -85,8 +85,7 @@ export function renderLobby(container) {
 
   // ── Back button ──
   document.getElementById('back-btn').addEventListener('click', () => {
-    gameState.reset();
-    events.emit(EVT.NAVIGATE, 'landing');
+    window.location.reload();
   });
 
   // ── Event listeners ──
